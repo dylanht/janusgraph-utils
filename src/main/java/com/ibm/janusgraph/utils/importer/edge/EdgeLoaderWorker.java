@@ -151,7 +151,7 @@ public class EdgeLoaderWorker extends Worker {
 	Iterator<Map<String, String>> records = getRecords();
 	while(records.hasNext()) {
 	    try {
-		acceptRecord(record);
+		acceptRecord(records.next());
 	    } catch (Exception e) {
 		log.error("Thread " + myID + ". Exception during record import.", e);
 	    }
