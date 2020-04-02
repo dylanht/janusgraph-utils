@@ -21,6 +21,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -50,7 +51,7 @@ public class CSVGenerator {
     private long CURRENT_TIME = cal.getTimeInMillis();
     private int[] RANDOM_INT_RANGE = {100000,99999999};
     private long[] RANDOM_TIME_RANGE = {(long)0, CURRENT_TIME};
-    private SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("dd-MMM-yyyy");
+    private static String TIME_FORMAT = "dd-MM-yyyy";
 
     /**
      * Initialize csv generator
@@ -83,26 +84,20 @@ public class CSVGenerator {
                 rec.add(RandomUtils.nextInt(fromInt, toInt));
             }else if (value.dataType.toLowerCase().equals("date")){
                 if (value.dateFormat != null) {
-                    this.TIME_FORMAT.applyPattern(value.dateFormat);
+                    this.TIME_FORMAT = value.dateFormat;
                 }
                 if (value.dateRange != null) {
-                    try {
-                        this.RANDOM_TIME_RANGE[0] =
-                                TIME_FORMAT.parse(value.dateRange.get("from")
-                                            ).getTime();
-                        this.RANDOM_TIME_RANGE[1] =
-                                TIME_FORMAT.parse(value.dateRange.get("to")
-                                            ).getTime();
-                    } catch (ParseException e) {
-                        throw new RuntimeException(e.getMessage() +
-                                ". the date cannot be parse using " +
-                                TIME_FORMAT.toPattern());
-                    }
+		    this.RANDOM_TIME_RANGE[0] =
+			this.getSafeDate(value.dateRange.get("from")
+					 ).getTime();
+		    this.RANDOM_TIME_RANGE[1] =
+			this.getSafeDate(value.dateRange.get("to")
+					 ).getTime();
                 }
-                cal.setTimeInMillis(
-                        RandomUtils.nextLong(this.RANDOM_TIME_RANGE[0],
-                                             this.RANDOM_TIME_RANGE[1]));
-                    rec.add(TIME_FORMAT.format(cal.getTime()).toString());
+		cal.setTimeInMillis(
+				    RandomUtils.nextLong(this.RANDOM_TIME_RANGE[0],
+							 this.RANDOM_TIME_RANGE[1]));
+		rec.add(this.getSafeDate(cal.getTime()));
             }
             else{
                 if ( value.dataSubType != null && value.dataSubType.toLowerCase().equals("name")) {
@@ -231,6 +226,27 @@ public class CSVGenerator {
             new Thread(task).start();
 
         }
+    }
+
+    /**
+     * Fix for thread collision causing invalid SimpleDateFormat string.
+     * See: https://stackoverflow.com/questions/21017502/numberformatexception-while-parsing-date-with-simpledateformat-parse
+     */
+    static Date getSafeDate(String dateStr) {
+	SimpleDateFormat formatter = new SimpleDateFormat(TIME_FORMAT);
+	formatter.format(new Date());
+	try {
+	    return formatter.parse(dateStr);
+	} catch (ParseException e) {
+	    throw new RuntimeException(e.getMessage() +
+				       ". the date cannot be parse using " +
+				       TIME_FORMAT);
+	}
+    }
+
+    static String getSafeDate(Date date) {
+	SimpleDateFormat formatter = new SimpleDateFormat(TIME_FORMAT);
+	return formatter.format(date);
     }
 
     /**

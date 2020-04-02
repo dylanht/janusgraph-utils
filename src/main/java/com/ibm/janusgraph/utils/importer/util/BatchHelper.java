@@ -36,37 +36,44 @@ public class BatchHelper {
 
     public static Date convertDate(String inputDate) throws ParseException {
         // TODO Handle time as part of date or separate
-
-        SimpleDateFormat dateParser = null;
+	
+	// Threadsafety!
+        // SimpleDateFormat dateParser = null;
         // Detect the date format and convert it
-        if (inputDate.matches("[0-9]*")) {
-            for (int i = inputDate.length(); i < 4; i++) {
-                inputDate = "0".concat(inputDate);
-            }
-            // Only numbers Hour / Minute format
-            dateParser = new SimpleDateFormat("Hm");
-        } else if (inputDate.matches("[0-9]{2}-[A-Za-z]{3}-[0-9]{4}")) {
-            // Use dd-MMM-yyyy format
-            dateParser = new SimpleDateFormat("dd-MMM-yyyy");
-        } else if (inputDate.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}")) {
-            // Use yyyy-mm-dd format
-            dateParser = new SimpleDateFormat("yyyy-mm-dd");
-        } else if (inputDate.matches("[0-9]{2}/[0-9]{2}/[0-9]{2}")) {
-            // Use dd/mm/yy format
-            dateParser = new SimpleDateFormat("dd/mm/yy");
-        } else if (inputDate.matches("[0-9]+\\.[0-9]{2}\\.[0-9]{4}")) {
-            // dd.mm.yyyy
-            dateParser = new SimpleDateFormat("dd.mm.yyyy");
-        } else {
-            // Default use MM/dd/yy
-            dateParser = new SimpleDateFormat("MM/dd/yy hh:mm");
-        }
-
-        return dateParser.parse(inputDate);
+	try {
+	    //if (inputDate.matches("[0-9]*")) {
+		//for (int i = inputDate.length(); i < 4; i++) {
+		//inputDate = "0".concat(inputDate);
+		//}
+		// Only numbers Hour / Minute format
+		//return new SimpleDateFormat("Hm").parse(inputDate);
+		//?}
+	    if (inputDate.matches("[0-9]{2}-[A-Za-z]{3}-[0-9]{4}")) {
+		// Use dd-MMM-yyyy format
+		return new SimpleDateFormat("dd-MMM-yyyy").parse(inputDate);
+	    } else if (inputDate.matches("[0-9]{2}-[0-9]{2}-[0-9]{4}")) {
+		// Use dd-MMM-yyyy format
+		return new SimpleDateFormat("dd-MM-yyyy").parse(inputDate);
+	    } else if (inputDate.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}")) {
+		// Use yyyy-mm-dd format
+		return new SimpleDateFormat("yyyy-mm-dd").parse(inputDate);
+	    } else if (inputDate.matches("[0-9]{2}/[0-9]{2}/[0-9]{2}")) {
+		// Use dd/mm/yy format
+		return new SimpleDateFormat("dd/mm/yy").parse(inputDate);
+	    } else if (inputDate.matches("[0-9]+\\.[0-9]{2}\\.[0-9]{4}")) {
+		// dd.mm.yyyy
+		return new SimpleDateFormat("dd.mm.yyyy").parse(inputDate);
+	    } else {
+		// Default use MM/dd/yy
+		return new SimpleDateFormat("MM/dd/yy hh:mm").parse(inputDate);
+	    }
+	} catch (ParseException e) {
+	    throw new RuntimeException(e.getMessage() + ". the date " + inputDate + " cannot be parsed.");
+	}
     }
 
     public static Object convertPropertyValue(String value, Class<?> dataType) throws ParseException {
-        Object convertedValue = null;
+        Object convertedValue = -1;
 
         if (dataType == Integer.class)
             convertedValue = new Integer(value);

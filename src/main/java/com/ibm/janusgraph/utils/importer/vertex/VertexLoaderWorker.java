@@ -44,9 +44,8 @@ public class VertexLoaderWorker extends Worker {
 
     private static final Logger log = LoggerFactory.getLogger(VertexLoaderWorker.class);
 
-    public VertexLoaderWorker(final Iterator<Map<String, String>> records, final Map<String, Object> propertiesMap,
-            final JanusGraph graph) {
-        super(records, propertiesMap, graph);
+    public VertexLoaderWorker(final Iterator<Map<String, String>> records, final Map<String, Object> propertiesMap) {
+        super(records, propertiesMap);
 
         this.currentRecord = 0;
         this.defaultVertexLabel = (String) propertiesMap.get(Constants.VERTEX_LABEL_MAPPING);
@@ -93,13 +92,18 @@ public class VertexLoaderWorker extends Worker {
         		// Update property only if it does not exist already
         		if (!v.properties(propName).hasNext()) {
         			// TODO Convert properties between data types. e.g. Date
-        			Object convertedValue = BatchHelper.convertPropertyValue(value,    							
+        			Object convertedValue = BatchHelper.convertPropertyValue(value,    						       
         					graphTransaction.getPropertyKey(propName).dataType());
+				log.info("value: "+value);
+				log.info("gtx: "+graphTransaction);
+				log.info("gtx_pk: "+graphTransaction.getPropertyKey(propName).dataType());
+				log.info("converted: "+convertedValue);
         			v.property(propName, convertedValue);
         		}
         	} 
         } catch (Exception error) {
-        	log.error("Error in acceptRecord:: Vertex:: "+vertexLabel+" :: "+error);
+	    error.printStackTrace();
+	    log.error("Error in acceptRecord:: Vertex:: "+vertexLabel+" :: PropertyKey :: "+record+" :: "+error);
         	v.remove();
         	log.info("acceptRecord::Vertex Removed");
         	return;
@@ -123,17 +127,14 @@ public class VertexLoaderWorker extends Worker {
 
         // Start new graph transaction
         graphTransaction = getGraph().newTransaction();
-        getRecords().forEachRemaining(new Consumer<Map<String, String>>() {
-            @Override
-            public void accept(Map<String, String> record) {
-                try {
-                    acceptRecord(record);
-                } catch (Exception e) {
-                    log.error("Thread " + myID + ". Exception during record import.", e);
-                }
-            }
-
-        });
+	Iterator<Map<String, String>> records = getRecords();
+        while(records.hasNext()) {
+	    try {
+		acceptRecord(record);
+	    } catch (Exception e) {
+		log.error("Thread " + myID + ". Exception during record import.", e);
+	    }
+	}
         graphTransaction.commit();
         graphTransaction.close();
 
