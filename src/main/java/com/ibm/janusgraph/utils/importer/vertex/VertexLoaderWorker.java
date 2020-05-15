@@ -92,12 +92,8 @@ public class VertexLoaderWorker extends Worker {
         		// Update property only if it does not exist already
         		if (!v.properties(propName).hasNext()) {
         			// TODO Convert properties between data types. e.g. Date
-        			Object convertedValue = BatchHelper.convertPropertyValue(value,    						       
+			    Object convertedValue = BatchHelper.convertPropertyValue(value,
         					graphTransaction.getPropertyKey(propName).dataType());
-				log.info("value: "+value);
-				log.info("gtx: "+graphTransaction);
-				log.info("gtx_pk: "+graphTransaction.getPropertyKey(propName).dataType());
-				log.info("converted: "+convertedValue);
         			v.property(propName, convertedValue);
         		}
         	} 
